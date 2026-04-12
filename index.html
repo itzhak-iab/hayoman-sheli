@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>✨ היומן שלי ✨</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&display=swap');
+  :root { --purple:#7c3aed; --pink:#ec4899; --blue:#3b82f6; --green:#10b981; --orange:#f59e0b; --red:#ef4444; --bg:#fef9ff; }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Rubik',sans-serif;background:var(--bg);min-height:100vh;overflow-x:hidden;}
+
+  .bg-shapes{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden;}
+  .bg-shapes span{position:absolute;display:block;border-radius:50%;opacity:.08;animation:floatShape 20s infinite ease-in-out;}
+  .bg-shapes span:nth-child(1){width:200px;height:200px;background:var(--purple);top:10%;left:5%;}
+  .bg-shapes span:nth-child(2){width:150px;height:150px;background:var(--pink);top:60%;right:10%;animation-delay:-5s;}
+  .bg-shapes span:nth-child(3){width:180px;height:180px;background:var(--blue);bottom:10%;left:30%;animation-delay:-10s;}
+  .bg-shapes span:nth-child(4){width:120px;height:120px;background:var(--green);top:30%;right:30%;animation-delay:-15s;}
+  .bg-shapes span:nth-child(5){width:160px;height:160px;background:var(--orange);top:70%;left:60%;animation-delay:-8s;}
+  @keyframes floatShape{0%,100%{transform:translate(0,0) scale(1);}25%{transform:translate(30px,-30px) scale(1.1);}50%{transform:translate(-20px,20px) scale(.95);}75%{transform:translate(15px,15px) scale(1.05);}}
+
+  .container{position:relative;z-index:1;max-width:700px;margin:0 auto;padding:20px;}
+
+  /* LOGIN */
+  #loginScreen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;text-align:center;}
+  #loginScreen h1{font-size:2.8em;font-weight:800;background:linear-gradient(135deg,var(--purple),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px;}
+  #loginScreen .subtitle{font-size:1.2em;color:#888;margin-bottom:40px;}
+  .avatars-grid{display:flex;flex-wrap:wrap;gap:18px;justify-content:center;max-width:580px;}
+  .avatar-btn{width:130px;padding:16px 8px;background:white;border:3px solid #e5e7eb;border-radius:24px;cursor:pointer;transition:all .3s ease;display:flex;flex-direction:column;align-items:center;gap:6px;}
+  .avatar-btn:hover{transform:translateY(-8px) scale(1.05);border-color:var(--purple);box-shadow:0 12px 30px rgba(124,58,237,.2);}
+  .avatar-img{width:65px;height:65px;border-radius:50%;object-fit:cover;border:3px solid #e5e7eb;background:#f3f4f6;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  .avatar-img img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+  .fallback-emoji{font-size:2.2em;line-height:1;}
+  .avatar-btn .name{font-size:1.05em;font-weight:700;color:#333;}
+  .avatar-btn .age-tag{font-size:.75em;color:#999;}
+  .avatar-btn .has-lock{font-size:.75em;color:#bbb;}
+
+  /* MODALS */
+  .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.4);z-index:2000;display:none;align-items:center;justify-content:center;}
+  .modal-overlay.show{display:flex;}
+  .modal-box{background:white;border-radius:28px;padding:32px;max-width:380px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2);animation:popIn .3s ease;}
+  .modal-box h3{font-size:1.3em;margin-bottom:6px;color:#333;}
+  .modal-box .modal-sub{color:#888;font-size:.95em;margin-bottom:20px;}
+  .modal-box input[type="password"],.modal-box input[type="text"]{width:100%;padding:14px;border:2px solid #e5e7eb;border-radius:14px;font-family:'Rubik';font-size:1.1em;text-align:center;letter-spacing:4px;margin-bottom:14px;direction:ltr;}
+  .modal-box input:focus{outline:none;border-color:var(--purple);}
+  .modal-box .modal-error{color:var(--red);font-size:.9em;margin-bottom:10px;display:none;}
+  .modal-box .modal-btns{display:flex;gap:10px;}
+  .modal-box .modal-btns button{flex:1;padding:12px;border:none;border-radius:14px;font-family:'Rubik';font-size:1em;font-weight:600;cursor:pointer;transition:all .2s;}
+  .btn-primary{background:linear-gradient(135deg,var(--purple),var(--pink));color:white;}
+  .btn-secondary{background:#f3f4f6;color:#666;}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 4px 15px rgba(124,58,237,.3);}
+
+  /* APP */
+  #appScreen{display:none;}
+  .top-bar{display:flex;justify-content:space-between;align-items:center;padding:15px 20px;margin-bottom:20px;background:white;border-radius:20px;box-shadow:0 4px 15px rgba(0,0,0,.06);flex-wrap:wrap;gap:10px;}
+  .top-bar .user-info{display:flex;align-items:center;gap:10px;}
+  .user-avatar{width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid #e5e7eb;}
+  .user-avatar-fallback{width:40px;height:40px;border-radius:50%;border:2px solid #e5e7eb;display:flex;align-items:center;justify-content:center;background:#f3f4f6;font-size:1.4em;}
+  .top-bar .user-name{font-weight:700;font-size:1.15em;color:#333;}
+  .points-badge{background:linear-gradient(135deg,var(--orange),#f97316);color:white;padding:8px 18px;border-radius:50px;font-weight:700;font-size:1em;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(245,158,11,.3);}
+  .top-bar-actions{display:flex;gap:8px;align-items:center;}
+  .icon-btn{background:#f3f4f6;border:none;border-radius:12px;padding:8px 14px;cursor:pointer;font-family:'Rubik';font-size:.85em;color:#666;transition:all .2s;}
+  .icon-btn:hover{background:#e5e7eb;}
+
+  /* SETTINGS */
+  .settings-panel{background:white;border-radius:20px;padding:20px;margin-bottom:20px;box-shadow:0 4px 15px rgba(0,0,0,.06);display:none;}
+  .settings-panel.show{display:block;}
+  .settings-panel h3{margin-bottom:16px;color:#333;}
+  .settings-row{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+  .settings-row label{font-weight:600;color:#555;min-width:80px;}
+  .settings-btn{padding:10px 18px;border:none;border-radius:12px;font-family:'Rubik';font-weight:600;cursor:pointer;transition:all .2s;background:var(--purple);color:white;font-size:.9em;}
+  .settings-btn:hover{opacity:.9;}
+  .settings-btn.danger{background:var(--red);}
+  .photo-upload-area{width:80px;height:80px;border-radius:50%;border:3px dashed #d1d5db;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;transition:all .3s;background:#f9fafb;position:relative;}
+  .photo-upload-area:hover{border-color:var(--purple);background:#f3f0ff;}
+  .photo-upload-area img{width:100%;height:100%;object-fit:cover;}
+  .photo-upload-area .upload-text{font-size:.7em;color:#999;text-align:center;line-height:1.2;}
+  .photo-upload-area input{display:none;}
+
+  /* TABS */
+  .tabs{display:flex;gap:10px;margin-bottom:20px;justify-content:center;}
+  .tab-btn{padding:10px 24px;border:none;border-radius:50px;font-family:'Rubik';font-size:1em;font-weight:600;cursor:pointer;transition:all .3s;background:white;color:#666;box-shadow:0 2px 8px rgba(0,0,0,.06);}
+  .tab-btn.active{background:linear-gradient(135deg,var(--purple),var(--pink));color:white;box-shadow:0 4px 15px rgba(124,58,237,.3);}
+
+  /* FORM */
+  #formView,#historyView{display:none;}
+  #formView.active,#historyView.active{display:block;}
+  .question-card{background:white;border-radius:24px;padding:24px;margin-bottom:18px;box-shadow:0 4px 15px rgba(0,0,0,.05);border-right:5px solid var(--purple);transition:all .3s;position:relative;overflow:hidden;}
+  .question-card:nth-child(2){border-right-color:var(--pink);}
+  .question-card:nth-child(3){border-right-color:var(--green);}
+  .question-card:nth-child(4){border-right-color:var(--blue);}
+  .question-card .q-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .question-card .q-icon{font-size:1.8em;}
+  .question-card .q-title{font-weight:700;font-size:1.05em;color:#333;}
+  .question-card textarea{width:100%;border:2px solid #e5e7eb;border-radius:16px;padding:14px;font-family:'Rubik';font-size:1em;resize:vertical;min-height:80px;transition:border-color .3s;direction:rtl;}
+  .question-card textarea:focus{outline:none;border-color:var(--purple);}
+  .check-done{display:none;position:absolute;top:12px;left:12px;font-size:1.5em;animation:popIn .4s ease;}
+  .question-card.answered .check-done{display:block;}
+  .question-card.answered{opacity:.85;}
+  @keyframes popIn{0%{transform:scale(0);}50%{transform:scale(1.3);}100%{transform:scale(1);}}
+
+  /* TORAH */
+  .torah-card{background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:24px;padding:24px;margin-bottom:18px;box-shadow:0 4px 15px rgba(245,158,11,.15);border-right:5px solid var(--orange);}
+  .torah-card .q-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .torah-card .q-icon{font-size:1.8em;}
+  .torah-card .q-title{font-weight:700;font-size:1.1em;color:#92400e;}
+  .torah-text{background:white;border-radius:16px;padding:18px;font-size:1.05em;line-height:1.8;color:#333;margin-bottom:14px;border:2px dashed #fbbf24;}
+  .torah-source{font-size:.85em;color:#92400e;font-weight:600;margin-bottom:14px;text-align:left;}
+  .torah-check-btn{display:flex;align-items:center;gap:10px;background:white;border:2px solid #fbbf24;border-radius:50px;padding:10px 20px;cursor:pointer;font-family:'Rubik';font-size:1em;font-weight:600;color:#92400e;transition:all .3s;}
+  .torah-check-btn:hover{background:#fef3c7;}
+  .torah-check-btn.checked{background:#10b981;border-color:#10b981;color:white;}
+  .torah-check-btn .checkbox{width:24px;height:24px;border:2px solid #fbbf24;border-radius:8px;display:flex;align-items:center;justify-content:center;background:white;transition:all .3s;}
+  .torah-check-btn.checked .checkbox{background:white;border-color:white;}
+
+  /* SUBMIT */
+  .submit-btn{display:block;width:100%;padding:18px;background:linear-gradient(135deg,var(--purple),var(--pink));color:white;border:none;border-radius:20px;font-family:'Rubik';font-size:1.3em;font-weight:700;cursor:pointer;transition:all .3s;box-shadow:0 6px 20px rgba(124,58,237,.3);margin-top:10px;}
+  .submit-btn:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(124,58,237,.4);}
+  .submit-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+
+  /* POPUP */
+  .points-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);background:white;border-radius:30px;padding:40px;text-align:center;z-index:1000;box-shadow:0 20px 60px rgba(0,0,0,.2);transition:transform .4s cubic-bezier(.175,.885,.32,1.275);}
+  .points-popup.show{transform:translate(-50%,-50%) scale(1);}
+  .points-popup .big-emoji{font-size:4em;margin-bottom:10px;}
+  .points-popup .big-text{font-size:2em;font-weight:800;background:linear-gradient(135deg,var(--orange),var(--red));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  .points-popup .sub-text{font-size:1.1em;color:#666;margin-top:8px;}
+  .overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.3);z-index:999;display:none;opacity:0;transition:opacity .3s;}
+  .overlay.show{display:block;opacity:1;}
+  .confetti-container{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1001;overflow:hidden;}
+  .confetti-piece{position:absolute;width:12px;height:12px;top:-20px;animation:confettiFall 3s ease-in forwards;}
+  @keyframes confettiFall{0%{transform:translateY(0) rotate(0deg);opacity:1;}100%{transform:translateY(110vh) rotate(720deg);opacity:0;}}
+
+  /* HISTORY */
+  .history-entry{background:white;border-radius:20px;padding:20px;margin-bottom:16px;box-shadow:0 4px 12px rgba(0,0,0,.05);border-right:4px solid var(--purple);}
+  .history-date{font-weight:700;font-size:1.1em;color:var(--purple);margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+  .history-date-hebrew{font-size:.9em;color:#999;font-weight:500;margin-bottom:12px;}
+  .history-item{margin-bottom:10px;}
+  .history-item .label{font-weight:600;color:#666;font-size:.9em;margin-bottom:3px;}
+  .history-item .value{color:#333;font-size:1em;line-height:1.5;}
+  .history-points{display:inline-block;background:linear-gradient(135deg,var(--orange),#f97316);color:white;padding:4px 14px;border-radius:50px;font-weight:700;font-size:.85em;margin-top:8px;}
+  .no-history{text-align:center;padding:60px 20px;color:#999;font-size:1.1em;}
+  .no-history .big{font-size:3em;margin-bottom:10px;}
+
+  .streak-bar{background:linear-gradient(135deg,#dbeafe,#ede9fe);border-radius:16px;padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:600;color:var(--purple);}
+  .streak-bar .fire{font-size:1.4em;}
+  .date-display{text-align:center;margin-bottom:4px;font-size:1.05em;color:#888;font-weight:500;}
+  .date-display-hebrew{text-align:center;margin-bottom:16px;font-size:1.05em;color:var(--purple);font-weight:600;}
+  .progress-bar-container{background:#e5e7eb;border-radius:50px;height:12px;margin-bottom:20px;overflow:hidden;}
+  .progress-bar-fill{height:100%;border-radius:50px;background:linear-gradient(90deg,var(--purple),var(--pink),var(--orange));transition:width .5s ease;width:0%;}
+  .mini-points{position:fixed;z-index:100;font-size:1.4em;font-weight:800;color:var(--orange);pointer-events:none;animation:floatUp 1.5s ease-out forwards;}
+  @keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(1);}100%{opacity:0;transform:translateY(-80px) scale(1.3);}}
+  .already-done{text-align:center;padding:40px 20px;background:white;border-radius:24px;box-shadow:0 4px 15px rgba(0,0,0,.05);}
+  .already-done .big{font-size:4em;margin-bottom:10px;}
+  .already-done h2{color:var(--green);margin-bottom:8px;}
+  .already-done p{color:#666;}
+
+  @media(max-width:500px){
+    #loginScreen h1{font-size:2em;}
+    .avatar-btn{width:100px;padding:12px 6px;}
+    .avatar-img{width:50px;height:50px;}
+    .fallback-emoji{font-size:1.8em;}
+  }
+</style>
+</head>
+<body>
+<div class="bg-shapes"><span></span><span></span><span></span><span></span><span></span></div>
+<div class="overlay" id="overlay"></div>
+<div class="points-popup" id="pointsPopup">
+  <div class="big-emoji">🎉</div>
+  <div class="big-text" id="popupText"></div>
+  <div class="sub-text" id="popupSub"></div>
+</div>
+<div class="confetti-container" id="confetti"></div>
+
+<!-- PASSWORD MODAL -->
+<div class="modal-overlay" id="passwordModal">
+  <div class="modal-box">
+    <h3 id="modalTitle"></h3>
+    <div class="modal-sub" id="modalSub"></div>
+    <input type="password" id="modalInput" placeholder="הקלד/י סיסמה..." maxlength="20">
+    <div class="modal-error" id="modalError">סיסמה שגויה, נסו שוב!</div>
+    <div class="modal-btns">
+      <button class="btn-primary" onclick="modalConfirm()">כניסה 🚀</button>
+      <button class="btn-secondary" onclick="closeModal()">ביטול</button>
+    </div>
+  </div>
+</div>
+<!-- SET PASSWORD MODAL -->
+<div class="modal-overlay" id="setPasswordModal">
+  <div class="modal-box">
+    <h3>🔐 הגדרת סיסמה</h3>
+    <div class="modal-sub" id="setPwSub"></div>
+    <input type="password" id="setPwInput1" placeholder="בחר/י סיסמה..." maxlength="20">
+    <input type="password" id="setPwInput2" placeholder="הקלד/י שוב לאישור..." maxlength="20">
+    <div class="modal-error" id="setPwError"></div>
+    <div class="modal-btns">
+      <button class="btn-primary" onclick="confirmSetPassword()">שמור 💾</button>
+      <button class="btn-secondary" onclick="closeSetPasswordModal()">ביטול</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div id="loginScreen">
+    <h1>✨ היומן שלי ✨</h1>
+    <div class="subtitle">התבוננות והעצמה אישית לכל יום</div>
+    <div class="avatars-grid" id="avatarsGrid"></div>
+  </div>
+
+  <div id="appScreen">
+    <div class="top-bar">
+      <div class="user-info">
+        <span id="topBarAvatar"></span>
+        <span class="user-name" id="userName"></span>
+      </div>
+      <div class="points-badge">⭐ <span id="totalPoints">0</span> נקודות</div>
+      <div class="top-bar-actions">
+        <button class="icon-btn" onclick="toggleSettings()">⚙️ הגדרות</button>
+        <button class="icon-btn" onclick="logout()">🔙 החלף</button>
+      </div>
+    </div>
+    <div class="settings-panel" id="settingsPanel">
+      <h3>⚙️ הגדרות</h3>
+      <div class="settings-row">
+        <label>תמונה:</label>
+        <div class="photo-upload-area" id="photoUploadArea" onclick="document.getElementById('photoInput').click()">
+          <span class="upload-text" id="photoPlaceholder">📷<br>העלאה</span>
+          <input type="file" id="photoInput" accept="image/*" onchange="handlePhotoUpload(event)">
+        </div>
+      </div>
+      <div class="settings-row">
+        <label>סיסמה:</label>
+        <button class="settings-btn" onclick="openSetPassword()" id="pwSettingsBtn">הגדר סיסמה 🔐</button>
+        <button class="settings-btn danger" onclick="removePassword()" id="pwRemoveBtn" style="display:none">הסר סיסמה 🗑️</button>
+      </div>
+    </div>
+    <div class="streak-bar" id="streakBar" style="display:none"><span class="fire">🔥</span><span id="streakText"></span></div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('form')">📝 היום שלי</button>
+      <button class="tab-btn" onclick="switchTab('history')">📅 ההיסטוריה שלי</button>
+    </div>
+    <div id="formView" class="active">
+      <div class="date-display" id="dateDisplay"></div>
+      <div class="date-display-hebrew" id="hebrewDateDisplay"></div>
+      <div class="progress-bar-container"><div class="progress-bar-fill" id="progressBar"></div></div>
+      <div id="formContent"></div>
+    </div>
+    <div id="historyView"><div id="historyContent"></div></div>
+  </div>
+</div>
+
+<script>
+// =============================================
+// HEBREW DATE
+// =============================================
+const HebDate=(()=>{
+  const MONTHS=['תשרי','חשון','כסלו','טבת','שבט','אדר','ניסן','אייר','סיון','תמוז','אב','אלול'];
+  const MONTHS_LEAP=['תשרי','חשון','כסלו','טבת','שבט','אדר א׳','אדר ב׳','ניסן','אייר','סיון','תמוז','אב','אלול'];
+  const DAYS=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+  const G_ONES=['','א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ז׳','ח׳','ט׳'];
+  const G_TENS=['','י׳','כ׳','ל׳'];
+  function hnum(n){
+    if(n===15)return'ט״ו';if(n===16)return'ט״ז';if(n<=0)return'';
+    const t=Math.floor(n/10),o=n%10;
+    let ts=t>0?G_TENS[t].replace('׳',''):'',os=o>0?G_ONES[o].replace('׳',''):'';
+    if(ts&&os)return ts+'״'+os;if(ts)return ts+'׳';if(os)return os+'׳';return'';
+  }
+  function hyear(y){
+    const h=Math.floor((y%1000)/100),t=Math.floor((y%100)/10),o=y%10;
+    const hs=['','ק','ר','ש','ת','תק','תר','תש','תת','תתק'];
+    const ts=['','י','כ','ל','מ','נ','ס','ע','פ','צ'];
+    const os=['','א','ב','ג','ד','ה','ו','ז','ח','ט'];
+    let s='ה׳'+hs[h]+ts[t];
+    if(t>0&&o>0)s+='״'+os[o];else if(o>0)s+=os[o]+'׳';else if(t>0)s+='׳';
+    return s;
+  }
+  function isLeap(y){return((7*y+1)%19)<7;}
+  function monthsIn(y){return isLeap(y)?13:12;}
+  function elapsed(y){
+    const m=Math.floor((235*Math.floor((y-1)/19))+(12*((y-1)%19))+(7*((y-1)%19)+1)/19);
+    const p=204+793*(m%1080);
+    const h=5+12*m+793*Math.floor(m/1080)+Math.floor(p/1080);
+    const parts=(p%1080)+1080*(h%24);
+    const day=1+29*m+Math.floor(h/24);
+    let ad;
+    if(parts>=19440||(day%7===2&&parts>=9924&&!isLeap(y))||(day%7===1&&parts>=16789&&isLeap(y-1)))ad=day+1;else ad=day;
+    if(ad%7===0||ad%7===3||ad%7===5)return ad+1;return ad;
+  }
+  function daysInY(y){return elapsed(y+1)-elapsed(y);}
+  function daysInM(m,y){
+    if(m===2||m===4||m===6||m===10||m===13)return 29;
+    if(m===12)return isLeap(y)?30:29;
+    if(m===8){return daysInY(y)%10===5?30:29;}
+    if(m===9){return daysInY(y)%10===3?29:30;}
+    return 30;
+  }
+  function toHeb(gY,gM,gD){
+    const a=Math.floor((14-gM)/12),y=gY+4800-a,mo=gM+12*a-3;
+    const jd=gD+Math.floor((153*mo+2)/5)+365*y+Math.floor(y/4)-Math.floor(y/100)+Math.floor(y/400)-32045;
+    const abs=jd-347996;
+    let hY=Math.floor((abs+347997)*19/6939.7)+1;
+    while(elapsed(hY)>abs)hY--;while(elapsed(hY+1)<=abs)hY++;
+    let hM=1,diy=abs-elapsed(hY)+1;
+    while(diy>daysInM(hM,hY)){diy-=daysInM(hM,hY);hM++;if(hM>monthsIn(hY))break;}
+    const mn=(isLeap(hY)?MONTHS_LEAP:MONTHS)[hM-1]||'';
+    return{day:diy,month:hM,year:hY,monthName:mn,dayStr:hnum(diy),yearStr:hyear(hY)};
+  }
+  function format(d){
+    d=d||new Date();const dow=DAYS[d.getDay()];
+    const h=toHeb(d.getFullYear(),d.getMonth()+1,d.getDate());
+    return`יום ${dow}, ${h.dayStr} ${h.monthName} ${h.yearStr}`;
+  }
+  function formatShort(ds){const d=new Date(ds);const h=toHeb(d.getFullYear(),d.getMonth()+1,d.getDate());return`${h.dayStr} ${h.monthName}`;}
+  return{format,formatShort};
+})();
+
+// =============================================
+// USERS – each has a UNIQUE id
+// =============================================
+const USERS=[
+  {id:'barik',   name:'באריק',  emoji:'👑', age:16, tier:'teen',  gender:'m'},
+  {id:'orish',   name:'אוריש',  emoji:'🦁', age:14, tier:'teen',  gender:'m'},
+  {id:'oria',    name:'אוריה',  emoji:'🦊', age:12, tier:'tween', gender:'f'},
+  {id:'tehili',  name:'תהלי',   emoji:'🦋', age:10, tier:'tween', gender:'f'},
+  {id:'yishai',  name:'ישי',    emoji:'🐻', age:8,  tier:'young', gender:'m'},
+  {id:'rivkush', name:'רבקוש',  emoji:'🌸', age:5,  tier:'young', gender:'f'},
+];
+
+// =============================================
+// 150+ ROTATING QUESTIONS BY AGE TIER
+// =============================================
+const Q_BANK = {
+  // -------- TEEN (14-16) --------
+  teen: {
+    learned: [
+      'מה הדבר הכי מפתיע שלמדת היום?',
+      'איזה רעיון חדש שמעת היום ששינה לך את החשיבה?',
+      'מה למדת היום שהיית רוצה לחקור יותר לעומק?',
+      'איזה קשר מצאת היום בין שני נושאים שונים שלמדת?',
+      'מה היה האתגר הלימודי הגדול ביותר שלך היום?',
+      'אם היית מורה, מה היית מלמד/ת אחרת ממה שהיה היום?',
+      'איזה שאלה טובה עלתה לך היום בלימודים?',
+      'מה למדת היום שיכול לעזור לך בחיים?',
+      'מה היה הנושא הכי מעניין שנגעת בו היום?',
+      'באיזה תחום הרגשת שהתקדמת היום?',
+      'מה למדת היום שהיית רוצה לספר לחבר?',
+      'איזה נקודת מבט חדשה שמעת היום מחבר/ה או מורה?',
+      'איזה קושייה נשארה לך פתוחה מהיום?',
+      'מה הדבר הכי מעשי שלמדת היום?',
+      'איזה רגע של הבנה פתאומית היה לך היום?',
+      'מה למדת היום על עם ישראל או על ההיסטוריה שלנו?',
+      'איזה פסוק או מאמר חז"ל דיברו עליו היום בשיעור?',
+      'מה למדת היום שגרם לך להרגיש גאווה?',
+      'באיזה רגע הרגשת הכי מרוכז/ת בשיעור?',
+      'מה הדבר שהכי תזכור מהיום הלימודי?',
+      'איזה ויכוח או דיון מעניין היה היום בכיתה?',
+      'מה למדת היום שמאתגר משהו שחשבת קודם?',
+      'איזה מיומנות חדשה תרגלת היום?',
+      'מה היה הרגע הכי יצירתי שלך היום בלימודים?',
+      'איזה עובדה מפתיעה גילית היום?',
+    ],
+    self: [
+      'מתי הרגשת הכי אותנטי/ת היום?',
+      'איזה ערך חשוב לך התבטא בפעולה שלך היום?',
+      'מה גילית על עצמך בתגובה למצב מאתגר?',
+      'באיזה רגע הרגשת גאווה בעצמך?',
+      'מה למדת על הגבולות שלך היום?',
+      'איזה כוח פנימי גילית בעצמך?',
+      'מתי בחרת לעשות את הדבר הנכון למרות שלא היה קל?',
+      'מה הרגשת כשעזרת למישהו היום?',
+      'איזה רגש חדש חווית היום ומה למדת ממנו?',
+      'מה אתה מבין עכשיו על עצמך שלא הבנת בבוקר?',
+      'באיזה מצב שמת לב שאתה מגיב אחרת ממה שציפית?',
+      'מה הדבר שאתה הכי רוצה לשפר בעצמך?',
+      'איך ההרגשה שלך השתנתה במהלך היום?',
+      'מתי הצלחת לשלוט ברגשות שלך היום?',
+      'איזה חלום או שאיפה התחזק/ה בך היום?',
+      'מה עשית היום שמייצג את מי שאתה רוצה להיות?',
+      'איזה הרגל טוב שמרת היום?',
+      'מתי הרגשת הכי חזק/ה מבפנים?',
+      'מה למדת על הדרך שבה אתה מתמודד עם לחץ?',
+      'באיזה מצב הצלחת להיות סבלני/ת במיוחד?',
+      'מה גילית על הכישרונות שלך?',
+      'איזה פחד התגברת עליו (ולו קצת) היום?',
+      'מה עשית היום שהפתיע אותך?',
+      'באיזה דרך גדלת רגשית היום?',
+      'מה הדבר שאתה הכי אוהב בעצמך שהתבטא היום?',
+    ],
+    happy: [
+      'מה היה הרגע הכי משמח ביום?',
+      'איזה שיחה טובה היתה לך היום?',
+      'מה גרם לך לחייך מאוזן לאוזן?',
+      'איזה רגע של חיבור חווית עם מישהו?',
+      'מה היה הדבר הכי מצחיק שקרה?',
+      'איזה הפתעה נעימה קיבלת היום?',
+      'מתי הרגשת הכי שמח/ה ושלו/ה?',
+      'מה עשית היום שנתן לך סיפוק?',
+      'איזה רגע קטן האיר לך את היום?',
+      'מה היה הדבר הכי יפה שראית/שמעת היום?',
+      'איזה מחמאה קיבלת או נתת?',
+      'מה היה הטעם הכי טעים שאכלת היום?',
+      'מתי צחקת הכי חזק?',
+      'איזה רגע רצית לעצור ולהגיד "כמה טוב!"?',
+      'מה עשית היום שנתן לך אנרגיה?',
+      'מי שימח אותך היום ואיך?',
+      'איזה הצלחה קטנה חגגת?',
+      'מה הרגע שהיית רוצה לחיות שוב?',
+      'באיזה רגע הרגשת אהוב/ה?',
+      'מה הדבר הטוב שקרה היום שלא ציפית לו?',
+      'איזה שיר, בדיחה או רגע העלו לך חיוך?',
+      'מתי הרגשת הכי קרוב למישהו?',
+      'מה הדבר הכי מגניב שעשית היום?',
+      'איזה רגע של שקט ושלווה היה לך?',
+      'מה היה הרגע שבו הרגשת הכי חי/ה?',
+    ],
+    grateful: [
+      'על איזה ברכה אמרת תודה לקב"ה בכוונה מיוחדת?',
+      'איזה חסד של הקב"ה שמת לב אליו היום?',
+      'על מה אתה מודה שאתה לוקח כמובן מאליו?',
+      'איזה אדם בחייך אתה מודה עליו לקב"ה?',
+      'על איזה כישרון שלך אתה רוצה להודות?',
+      'מה קרה היום שהראה לך שהקב"ה דואג לך?',
+      'איזה דבר "קטן" בחיים שלך הוא בעצם גדול?',
+      'על איזה חוויה מהיום אתה מודה?',
+      'מה יש לך שאתה ממש שמח שיש לך?',
+      'על מה בבית שלך אתה מודה?',
+      'איזה הזדמנות קיבלת היום שאתה מודה עליה?',
+      'על איזה ידע או יכולת שלך אתה מודה?',
+      'מה הדבר הכי יפה בטבע שראית היום?',
+      'על מה בבריאות שלך אתה מודה?',
+      'איזה אדם עשה לך טובה היום?',
+      'על מה במשפחה שלך אתה מודה?',
+      'מה הדבר שלמדת היום שאתה מודה עליו?',
+      'איזה רגע של נחמה או עידוד חווית?',
+      'על מה בארץ ישראל אתה מודה?',
+      'מה ברגע הזה ממלא אותך בהכרת תודה?',
+      'איזה חבר/ה אתה מודה עליו/ה?',
+      'על מה בתורה שלמדת היום אתה מודה?',
+      'מה הדבר שמחזק אותך שאתה מודה עליו?',
+      'על מה ביום הזה ספציפית אתה מודה?',
+      'מה הדבר שהכי ממלא אותך בשמחה ותודה?',
+    ],
+  },
+  // -------- TWEEN (10-12) --------
+  tween: {
+    learned: [
+      'מה הדבר הכי מעניין שלמדת היום?',
+      'איזה דבר חדש שמעת שלא ידעת קודם?',
+      'מה היה הנושא הכי כיף בשיעורים?',
+      'מה למדת היום שהפתיע אותך?',
+      'איזה שאלה שאלת או רצית לשאול בשיעור?',
+      'מה היה הכי קשה בלימודים היום?',
+      'איזה דבר הצלחת להבין שלא הבנת קודם?',
+      'מה למדת היום שתוכל/י לספר בבית?',
+      'איזה עובדה מגניבה גילית?',
+      'מה למדת על אישיות מהתנ"ך או ההיסטוריה?',
+      'באיזה שיעור הרגשת הכי מעורב/ת?',
+      'מה למדת מחבר/ה שלך היום?',
+      'איזה ניסוי, פעילות או משחק מעניין עשיתם?',
+      'מה הדבר הכי חשוב שלמדת היום?',
+      'איזה רעיון חדש יש לך בגלל משהו שלמדת?',
+      'מה למדת היום בגמרא או בנ"ך?',
+      'איזה מילה חדשה למדת?',
+      'מה היה הכי מעניין בשיעורי בית?',
+      'על מה היית רוצה ללמוד עוד?',
+      'מה למדת היום על העולם שסביבך?',
+      'איזה חוכמה שמעת ממורה שלך?',
+      'מה היה המבחן או התרגיל הכי מאתגר?',
+      'מה למדת היום שאפשר ליישם בחיים?',
+      'באיזה נושא הרגשת שהשתפרת?',
+      'מה הדבר שהכי תזכור מהיום?',
+    ],
+    self: [
+      'מה גילית על עצמך היום?',
+      'מתי הרגשת גאווה בעצמך?',
+      'מה עשית היום שאתה שמח שעשית?',
+      'איזה תכונה טובה שלך התגלתה היום?',
+      'מה הצלחת לעשות שחשבת שיהיה קשה?',
+      'מתי הראית אומץ או נחישות?',
+      'מה למדת על מה שחשוב לך?',
+      'באיזה מצב הצלחת להיות טוב לאחרים?',
+      'מה הדבר שאתה הכי טוב בו?',
+      'מתי עשית בחירה טובה היום?',
+      'מה הרגשת כשהתמודדת עם קושי?',
+      'איזה הרגל טוב שמרת היום?',
+      'מה עשית שגרם לך להרגיש טוב עם עצמך?',
+      'מתי הצלחת להתאפק או להיות סבלני/ת?',
+      'מה אתה יודע על עצמך שלא ידעת שבוע שעבר?',
+      'איזה דבר אתה רוצה לנסות בגלל משהו שקרה היום?',
+      'מתי עזרת למישהו ומה הרגשת?',
+      'מה גרם לך להרגיש חזק/ה היום?',
+      'באיזה דרך גדלת היום?',
+      'מה הדבר שהכי מיוחד בך?',
+      'מתי אמרת משהו שאתה גאה בו?',
+      'מה למדת על האופן שבו אתה מתמודד עם שינויים?',
+      'איזה כישרון שלך השתמשת בו היום?',
+      'מה עשית אחרת מהרגיל ואיך הרגשת?',
+      'מתי פעלת לפי מה שאתה מאמין בו?',
+    ],
+    happy: [
+      'מה עשה אותך שמח/ה היום?',
+      'מה היה הרגע הכי כיף?',
+      'מי גרם לך לחייך?',
+      'מה היה הדבר הכי מצחיק?',
+      'איזה רגע טוב היה לך עם חברים?',
+      'מה הפתיע אותך לטובה?',
+      'מתי צחקת היום?',
+      'מה היה הדבר הכי טעים שאכלת?',
+      'איזה משחק או פעילות כיף עשית?',
+      'מה הדבר היפה שראית היום?',
+      'מי אמר לך משהו נחמד?',
+      'מתי הרגשת שמח/ה בלי סיבה?',
+      'מה עשית בהפסקה שהיה כיף?',
+      'איזה הצלחה קטנה שמחה אותך?',
+      'מה הרגע שהיית רוצה לחזור עליו?',
+      'מי שיחק/ה איתך היום וכיף היה?',
+      'מה שמעת היום שעשה לך טוב?',
+      'איזה רגע של חיבוק או חום היה?',
+      'מה הדבר שהכי שימח אותך בדרך הביתה?',
+      'באיזה רגע הרגשת הכי קל על הלב?',
+      'מה הרגע הכי מתוק ביום?',
+      'מה עשית שגרם גם לאחרים לחייך?',
+      'איזה חדשות טובות שמעת?',
+      'מתי הרגשת ממש אהוב/ה?',
+      'מה הדבר שגרם לך להרגיש מיוחד?',
+    ],
+    grateful: [
+      'על מה אתה רוצה להגיד תודה לקב"ה?',
+      'מה הדבר הכי טוב שיש לך בחיים?',
+      'על איזה אדם במשפחה אתה מודה?',
+      'מה יש לך שלא כולם זוכים לקבל?',
+      'על מה בביתך אתה מודה?',
+      'איזה חבר/ה טוב/ה יש לך שאתה מודה עליו/ה?',
+      'על מה בבריאות שלך אתה שמח?',
+      'מה הדבר הכי יפה בטבע שראית?',
+      'על איזה אוכל טעים אתה מודה?',
+      'מה הכי כיף בלהיות ילד/ה?',
+      'על מה בארץ ישראל אתה מודה?',
+      'איזה דבר טוב קיבלת היום?',
+      'על מה בשבת אתה מודה?',
+      'מה בתורה שאתה שמח שיש?',
+      'על מי בכיתה שלך אתה מודה?',
+      'מה הדבר שמשמח אותך הכי הרבה?',
+      'על איזה יכולת שלך אתה מודה?',
+      'מה הדבר שאתה מודה עליו כל יום?',
+      'על מה בעולם הזה אתה שמח שקיים?',
+      'מה הדבר שהקב"ה נתן לך שאתה ממש אוהב?',
+      'על מה בבית הספר שלך אתה מודה?',
+      'איזה רגע יפה קרה שאתה מודה עליו?',
+      'על מה בחיי היומיום אתה מודה?',
+      'מה עוזר לך להרגיש טוב שאתה מודה עליו?',
+      'על מי שעזר לך היום אתה מודה?',
+    ],
+  },
+  // -------- YOUNG (5-8) --------
+  young: {
+    learned: [
+      'מה למדת חדש היום?',
+      'מה היה הכי כיף ללמוד?',
+      'איזה סיפור שמעת היום?',
+      'מה המורה סיפר/ה שהיה מעניין?',
+      'איזה מילה חדשה למדת?',
+      'מה למדת על חיות או טבע?',
+      'איזה ציור או יצירה עשית?',
+      'מה למדת מהפרשה?',
+      'איזה שיר חדש למדת?',
+      'מה הכי הפתיע אותך היום?',
+      'מה למדת שאתה רוצה לספר לאמא/אבא?',
+      'איזה חשבון או תרגיל הצלחת?',
+      'מה למדת על אות או מספר?',
+      'מה הכי מעניין שהמורה אמר/ה?',
+      'איזה משחק לימודי שיחקתם?',
+      'מה למדת שלא ידעת אתמול?',
+      'מה עשיתם בשיעור שהיה כיף?',
+      'איזה דבר חכם שמעת היום?',
+      'מה למדת על משה רבנו או דמות מהתנ"ך?',
+      'איזה ניסוי או הפתעה היתה?',
+      'מה למדת ממישהו בכיתה?',
+      'מה הכי קשה שעשית היום ועדיין הצלחת?',
+      'איזה פאזל או חידה פתרת?',
+      'מה למדת לעשות היום?',
+      'מה הכי אהבת בגן/בבית ספר?',
+    ],
+    self: [
+      'מה אתה הכי טוב בו?',
+      'מתי הרגשת גיבור/ה היום?',
+      'מה עשית שאתה גאה בזה?',
+      'מתי היית אמיץ/ה?',
+      'מה אתה אוהב בעצמך?',
+      'מתי עזרת לחבר/ה?',
+      'מה הצלחת לעשות לבד?',
+      'מתי אמרת "אני יכול/ה!" והצלחת?',
+      'מה עשית טוב היום?',
+      'מתי היית נחמד/ה למישהו?',
+      'מה הדבר המיוחד בך?',
+      'מתי שמרת על הכללים?',
+      'מה גרם לך להרגיש חזק/ה?',
+      'מתי חיכית בסבלנות?',
+      'מה אתה יודע לעשות ממש טוב?',
+      'מתי שיתפת עם מישהו?',
+      'מה הדבר האמיץ שעשית?',
+      'מתי אמרת סליחה או תודה?',
+      'מה עשית שגרם למישהו לחייך?',
+      'מתי ניסית משהו חדש?',
+      'מה אתה רוצה ללמוד לעשות?',
+      'מתי הרגשת שאתה גדל/ה?',
+      'מה הדבר שאתה הכי שמח שאתה יודע?',
+      'מתי עשית דבר טוב בלי שביקשו?',
+      'מה מיוחד בך שאין לאף אחד אחר?',
+    ],
+    happy: [
+      'מה היה הכי כיף היום?',
+      'מי גרם לך לצחוק?',
+      'מה משהו טוב שקרה?',
+      'עם מי שיחקת וכיף היה?',
+      'מה היה הכי מצחיק?',
+      'מה אכלת טעים?',
+      'מה עשית בהפסקה?',
+      'מי חיבק אותך היום?',
+      'מה הדבר הכי יפה שראית?',
+      'מתי חייכת הכי גדול?',
+      'מה שמעת שעשה לך טוב?',
+      'איזה משחק כיף שיחקת?',
+      'מה הדבר הכי מגניב שקרה?',
+      'מי אמר לך משהו יפה?',
+      'מה עשית עם חברים שהיה כיף?',
+      'מה היה הרגע הכי שמח?',
+      'איזה הפתעה נחמדה קיבלת?',
+      'מה הדבר שהכי אהבת היום?',
+      'מתי הרגשת שמחה גדולה?',
+      'מה עשית שגרם לך להרגיש מעולה?',
+      'איזה בדיחה שמעת?',
+      'מה היה כיף בדרך לבית ספר או הביתה?',
+      'מתי הרגשת ממש אהוב/ה?',
+      'מה הדבר הכי חמוד שקרה?',
+      'מה עשה אותך שמח/ה?',
+    ],
+    grateful: [
+      'על מה אתה רוצה להגיד תודה להשם?',
+      'מה הדבר הכי טוב שיש לך?',
+      'על מי במשפחה אתה שמח?',
+      'מה אתה אוהב בבית שלך?',
+      'על איזה צעצוע או דבר אתה שמח?',
+      'על מי מהחברים שלך אתה שמח?',
+      'מה הכי טעים שהשם ברא?',
+      'על איזה חיה אתה שמח שקיימת?',
+      'מה הדבר הכי יפה שהשם ברא?',
+      'על מה בגוף שלך אתה מודה?',
+      'מה הכי כיף בעולם?',
+      'על מה בשבת אתה שמח?',
+      'מה הדבר שאתה הכי אוהב?',
+      'על מי אתה רוצה להגיד תודה?',
+      'מה הדבר שמשמח אותך כל יום?',
+      'על מה ביום הזה אתה שמח?',
+      'מה הדבר הכי מתוק שיש?',
+      'על איזה מקום מיוחד אתה מודה?',
+      'מה השם נותן לך כל בוקר?',
+      'על מה בגשם/שמש/שלג אתה מודה?',
+      'מה הכי כיף במשפחה שלך?',
+      'על איזה אוכל אתה מודה?',
+      'מה בארץ ישראל אתה אוהב?',
+      'מה הדבר שאתה שמח שיש בעולם?',
+      'על מה אתה מודה עכשיו?',
+    ],
+  }
+};
+
+const CATEGORIES = [
+  { id:'learned', icon:'📚', label:'לימוד' },
+  { id:'self',    icon:'🪞', label:'עצמי' },
+  { id:'happy',   icon:'😊', label:'שמחה' },
+  { id:'grateful',icon:'🙏', label:'תודה לקב"ה', fixed:'על מה אתה מודה להשם?' },
+];
+
+// Get today's question for a specific user and category
+function genderize(q, gender) {
+  if (gender !== 'f') return q;
+  return q
+    .replace(/\bאתה מודה\b/g, 'את מודה')
+    .replace(/\bאתה לוקח\b/g, 'את לוקחת')
+    .replace(/\bאתה רוצה\b/g, 'את רוצה')
+    .replace(/\bאתה יודע\b/g, 'את יודעת')
+    .replace(/\bאתה מרגיש\b/g, 'את מרגישה')
+    .replace(/\bאתה עושה\b/g, 'את עושה')
+    .replace(/\bאתה חושב\b/g, 'את חושבת')
+    .replace(/\bאתה יכול\b/g, 'את יכולה')
+    .replace(/\bאתה אוהב\b/g, 'את אוהבת')
+    .replace(/\bאתה לומד\b/g, 'את לומדת')
+    .replace(/\bאתה צריך\b/g, 'את צריכה')
+    .replace(/\bאתה רואה\b/g, 'את רואה')
+    .replace(/\bאתה שומע\b/g, 'את שומעת')
+    .replace(/\bאתה נותן\b/g, 'את נותנת')
+    .replace(/\bאתה מקבל\b/g, 'את מקבלת')
+    .replace(/\bאתה שמח\b/g, 'את שמחה')
+    .replace(/\bאתה גאה\b/g, 'את גאה')
+    .replace(/\bעליך\b/g, 'עלייך')
+    .replace(/\bשלך\b/g, 'שלך')
+    .replace(/\bלך\b(?!\s*ל)/g, 'לך')
+    .replace(/\bאותך\b/g, 'אותך');
+}
+
+function getTodayQuestion(userId, categoryId) {
+  const user = USERS.find(u => u.id === userId);
+  // Fixed question for grateful category
+  const cat = CATEGORIES.find(c => c.id === categoryId);
+  if (cat && cat.fixed) {
+    return genderize(cat.fixed, user ? user.gender : 'm');
+  }
+  if (!user) return '';
+  const pool = Q_BANK[user.tier][categoryId];
+  // Use day-of-year + user-specific offset for variety
+  const doy = Math.floor((new Date() - new Date(new Date().getFullYear(),0,0)) / 86400000);
+  const userOffset = userId.split('').reduce((s,c) => s + c.charCodeAt(0), 0);
+  const idx = (doy + userOffset) % pool.length;
+  return genderize(pool[idx], user.gender);
+}
+
+const TORAH_PASSAGES = [
+  {text:'״וְאָהַבְתָּ לְרֵעֲךָ כָּמוֹךָ״ – כל אחד מאיתנו הוא מיוחד, וכשאנחנו אוהבים אחרים כמו שאנחנו אוהבים את עצמנו, העולם נהיה מקום יותר טוב!',source:'ויקרא י״ט, י״ח'},
+  {text:'״בְּרֵאשִׁית בָּרָא אֱלֹהִים אֵת הַשָּׁמַיִם וְאֵת הָאָרֶץ״ – הקב״ה ברא עולם שלם בשבילנו! כמה מדהים שאנחנו חלק מהבריאה.',source:'בראשית א׳, א׳'},
+  {text:'״אֵיזֶהוּ גִבּוֹר? הַכּוֹבֵשׁ אֶת יִצְרוֹ״ – הגיבור האמיתי הוא מי שיודע לשלוט בעצמו ולהתגבר על הקשיים!',source:'פרקי אבות ד׳, א׳'},
+  {text:'״עֲשֵׂה לְךָ רַב, וּקְנֵה לְךָ חָבֵר״ – חשוב שיהיה לנו מורה שנלמד ממנו, וחבר טוב שנגדל איתו יחד!',source:'פרקי אבות א׳, ו׳'},
+  {text:'״הֱוֵי מְקַבֵּל אֶת כָּל הָאָדָם בְּסֵבֶר פָּנִים יָפוֹת״ – כשמחייכים לאנשים ומקבלים אותם בשמחה, משמחים אותם וגם את עצמנו!',source:'פרקי אבות א׳, ט״ו'},
+  {text:'״אִם אֵין אֲנִי לִי, מִי לִי? וּכְשֶׁאֲנִי לְעַצְמִי, מָה אֲנִי?״ – חשוב לדאוג לעצמנו, אבל גם חשוב לעזור לאחרים!',source:'פרקי אבות א׳, י״ד'},
+  {text:'״אַל תִּסְתַּכֵּל בַּקַּנְקַן, אֶלָּא בְּמַה שֶׁיֵּשׁ בּוֹ״ – לא חשוב איך דברים נראים מבחוץ, מה שחשוב זה מה שיש בפנים!',source:'פרקי אבות ד׳, כ׳'},
+  {text:'״כָּל יִשְׂרָאֵל עֲרֵבִים זֶה בָּזֶה״ – כולנו אחים ואחיות, כולנו דואגים ועוזרים אחד לשני!',source:'שבועות ל״ט'},
+  {text:'״שִׁוִּיתִי ה׳ לְנֶגְדִּי תָמִיד״ – כשזוכרים שהקב״ה תמיד איתנו, מרגישים חזקים ושמחים!',source:'תהילים ט״ז, ח׳'},
+  {text:'״מָה טוֹבוּ אֹהָלֶיךָ יַעֲקֹב, מִשְׁכְּנֹתֶיךָ יִשְׂרָאֵל״ – הבית שלנו מיוחד וקדוש, מה שעושה אותו מיוחד זה האהבה!',source:'במדבר כ״ד, ה׳'},
+  {text:'״הַלְלוּ אֶת ה׳ כָּל גּוֹיִם... כִּי גָבַר עָלֵינוּ חַסְדּוֹ״ – הקב"ה עושה לנו חסדים כל יום, גם כאלה שלא שמים לב!',source:'תהילים קי״ז'},
+  {text:'״בְּכָל דְּרָכֶיךָ דָעֵהוּ, וְהוּא יְיַשֵּׁר אֹרְחֹתֶיךָ״ – כשזוכרים את הקב"ה בכל מה שעושים, הוא עוזר לנו!',source:'משלי ג׳, ו׳'},
+  {text:'״חֲנֹךְ לַנַּעַר עַל פִּי דַרְכּוֹ, גַּם כִּי יַזְקִין לֹא יָסוּר מִמֶּנָּה״ – מה שלומדים בילדות נשאר לכל החיים!',source:'משלי כ״ב, ו׳'},
+  {text:'״דַּע מֵאַיִן בָּאתָ, וּלְאָן אַתָּה הוֹלֵךְ״ – כשחושבים על מה באמת חשוב, עושים בחירות טובות יותר!',source:'פרקי אבות ג׳, א׳'},
+];
+
+const PRAISE=[
+  {text:'נהדר!',emoji:'🌟'},{text:'מדהים!',emoji:'🚀'},{text:'כל הכבוד!',emoji:'👏'},
+  {text:'וואו!',emoji:'🎯'},{text:'מעולה!',emoji:'💫'},{text:'אלוף/ה!',emoji:'🏆'},
+  {text:'יופי!',emoji:'✨'},{text:'סותר/ת!',emoji:'💪'},
+];
+const FINALS=['סיימת את היומן של היום!','עוד יום מדהים שתיעדת!','את/ה גדל/ה כל יום!','הקב"ה שמח בך!','איזה יום מיוחד!'];
+
+// =============================================
+// STATE
+// =============================================
+let currentUser=null, answeredQ=new Set(), torahRead=false, pendingLogin=null;
+
+// =============================================
+// STORAGE
+// =============================================
+function getData(){try{return JSON.parse(localStorage.getItem('kidsDiary')||'{}')}catch{return{}}}
+function saveData(d){localStorage.setItem('kidsDiary',JSON.stringify(d))}
+function getUserData(uid){const d=getData();if(!d[uid])d[uid]={entries:[],totalPoints:0};return d[uid];}
+function getMeta(uid){try{return JSON.parse(localStorage.getItem('kidsMeta_'+uid)||'{}')}catch{return{}}}
+function saveMeta(uid,m){localStorage.setItem('kidsMeta_'+uid,JSON.stringify(m))}
+function getPhoto(uid){return getMeta(uid).photo||null}
+function getPass(uid){return getMeta(uid).password||null}
+
+// =============================================
+// DATE HELPERS
+// =============================================
+function todayStr(){return new Date().toISOString().split('T')[0]}
+function gregDate(){
+  const d=new Date(),dw=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+  const mo=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+  return`יום ${dw[d.getDay()]}, ${d.getDate()} ${mo[d.getMonth()]} ${d.getFullYear()}`;
+}
+function todayTorah(){
+  const doy=Math.floor((new Date()-new Date(new Date().getFullYear(),0,0))/864e5);
+  return TORAH_PASSAGES[doy%TORAH_PASSAGES.length];
+}
+function getStreak(uid){
+  const ud=getUserData(uid);if(!ud.entries.length)return 0;
+  let s=0,ck=new Date();ck.setHours(0,0,0,0);
+  if(!ud.entries.some(e=>e.date===todayStr()))ck.setDate(ck.getDate()-1);
+  while(true){const ds=ck.toISOString().split('T')[0];if(ud.entries.some(e=>e.date===ds)){s++;ck.setDate(ck.getDate()-1)}else break;}
+  return s;
+}
+
+// =============================================
+// RENDER LOGIN
+// =============================================
+function renderLogin(){
+  document.getElementById('avatarsGrid').innerHTML=USERS.map(u=>{
+    const ph=getPhoto(u.id),hp=!!getPass(u.id);
+    const img=ph?`<div class="avatar-img"><img src="${ph}"></div>`:`<div class="avatar-img"><span class="fallback-emoji">${u.emoji}</span></div>`;
+    return`<button class="avatar-btn" data-uid="${u.id}" onclick="attemptLogin('${u.id}')">
+      ${img}<div class="name">${u.name}</div>
+      <div class="age-tag">גיל ${u.age}</div>
+      ${hp?'<div class="has-lock">🔒</div>':''}
+    </button>`;
+  }).join('');
+}
+
+// =============================================
+// PASSWORD FLOW
+// =============================================
+function attemptLogin(uid){
+  const pw=getPass(uid);
+  if(!pw){login(uid);return;}
+  pendingLogin=uid;
+  const u=USERS.find(x=>x.id===uid);
+  document.getElementById('modalTitle').textContent=`🔐 ${u.name}`;
+  document.getElementById('modalSub').textContent='הקלד/י את הסיסמה שלך';
+  document.getElementById('modalInput').value='';
+  document.getElementById('modalError').style.display='none';
+  document.getElementById('passwordModal').classList.add('show');
+  setTimeout(()=>document.getElementById('modalInput').focus(),200);
+}
+function modalConfirm(){
+  const v=document.getElementById('modalInput').value;
+  if(v===getPass(pendingLogin)){closeModal();login(pendingLogin);}
+  else{document.getElementById('modalError').style.display='block';document.getElementById('modalInput').value='';document.getElementById('modalInput').focus();}
+}
+function closeModal(){document.getElementById('passwordModal').classList.remove('show');pendingLogin=null;}
+document.getElementById('modalInput').addEventListener('keydown',e=>{if(e.key==='Enter')modalConfirm();});
+
+function openSetPassword(){
+  const hp=!!getPass(currentUser.id);
+  document.getElementById('setPwSub').textContent=(hp?'שינוי':'הגדרת')+' סיסמה ל'+currentUser.name;
+  document.getElementById('setPwInput1').value='';document.getElementById('setPwInput2').value='';
+  document.getElementById('setPwError').style.display='none';
+  document.getElementById('setPasswordModal').classList.add('show');
+  setTimeout(()=>document.getElementById('setPwInput1').focus(),200);
+}
+function confirmSetPassword(){
+  const p1=document.getElementById('setPwInput1').value,p2=document.getElementById('setPwInput2').value;
+  if(!p1){document.getElementById('setPwError').textContent='צריך לרשום סיסמה!';document.getElementById('setPwError').style.display='block';return;}
+  if(p1!==p2){document.getElementById('setPwError').textContent='הסיסמאות לא תואמות!';document.getElementById('setPwError').style.display='block';return;}
+  const m=getMeta(currentUser.id);m.password=p1;saveMeta(currentUser.id,m);
+  closeSetPasswordModal();updatePwBtns();renderLogin();
+}
+function removePassword(){const m=getMeta(currentUser.id);delete m.password;saveMeta(currentUser.id,m);updatePwBtns();renderLogin();}
+function closeSetPasswordModal(){document.getElementById('setPasswordModal').classList.remove('show');}
+function updatePwBtns(){
+  const hp=!!getPass(currentUser.id);
+  document.getElementById('pwSettingsBtn').textContent=hp?'שנה סיסמה 🔐':'הגדר סיסמה 🔐';
+  document.getElementById('pwRemoveBtn').style.display=hp?'inline-block':'none';
+}
+
+// =============================================
+// PHOTO
+// =============================================
+function handlePhotoUpload(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();r.onload=ev=>{
+    const img=new Image();img.onload=()=>{
+      const c=document.createElement('canvas'),MX=200;
+      let w=img.width,h=img.height;
+      if(w>h){h=(h/w)*MX;w=MX;}else{w=(w/h)*MX;h=MX;}
+      c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);
+      const d=c.toDataURL('image/jpeg',.8);
+      const m=getMeta(currentUser.id);m.photo=d;saveMeta(currentUser.id,m);
+      updatePhotoUI();updateTopAvatar();renderLogin();
+    };img.src=ev.target.result;
+  };r.readAsDataURL(f);
+}
+function updatePhotoUI(){
+  const a=document.getElementById('photoUploadArea'),ph=getPhoto(currentUser.id),pl=document.getElementById('photoPlaceholder');
+  if(ph){let i=a.querySelector('img');if(!i){i=document.createElement('img');a.appendChild(i);}i.src=ph;pl.style.display='none';}
+  else{const i=a.querySelector('img');if(i)i.remove();pl.style.display='';}
+}
+function updateTopAvatar(){
+  const ph=getPhoto(currentUser.id),el=document.getElementById('topBarAvatar');
+  el.innerHTML=ph?`<img class="user-avatar" src="${ph}">`:`<span class="user-avatar-fallback">${currentUser.emoji}</span>`;
+}
+
+// =============================================
+// LOGIN / LOGOUT
+// =============================================
+function login(uid){
+  currentUser=USERS.find(u=>u.id===uid);
+  answeredQ=new Set();torahRead=false;
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('appScreen').style.display='block';
+  document.getElementById('userName').textContent=currentUser.name;
+  document.getElementById('dateDisplay').textContent=gregDate();
+  document.getElementById('hebrewDateDisplay').textContent=HebDate.format(new Date());
+  updateTopAvatar();
+  const ud=getUserData(currentUser.id);
+  document.getElementById('totalPoints').textContent=ud.totalPoints;
+  const st=getStreak(currentUser.id);
+  const sb=document.getElementById('streakBar');
+  if(st>1){sb.style.display='flex';document.getElementById('streakText').textContent=`רצף של ${st} ימים!`;}else{sb.style.display='none';}
+  document.getElementById('settingsPanel').classList.remove('show');
+  updatePwBtns();updatePhotoUI();switchTab('form');renderForm();renderHistory();
+}
+function logout(){
+  currentUser=null;
+  document.getElementById('appScreen').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+  renderLogin();
+}
+function toggleSettings(){document.getElementById('settingsPanel').classList.toggle('show');}
+
+// =============================================
+// FORM
+// =============================================
+function renderForm(){
+  const ud=getUserData(currentUser.id);
+  const te=ud.entries.find(e=>e.date===todayStr());
+  const fc=document.getElementById('formContent');
+  if(te){
+    fc.innerHTML=`<div class="already-done"><div class="big">🌟</div><h2>כבר מילאת את היומן היום!</h2><p>נתראה מחר 😊</p><p style="margin-top:12px;font-size:.9em;color:#999">קיבלת <strong>${te.pointsEarned}</strong> נקודות!</p></div>`;
+    return;
+  }
+  const torah=todayTorah();
+  let html=CATEGORIES.map(cat=>{
+    const q=getTodayQuestion(currentUser.id, cat.id);
+    return`<div class="question-card" id="card-${cat.id}">
+      <span class="check-done">✅</span>
+      <div class="q-header"><span class="q-icon">${cat.icon}</span><span class="q-title">${q}</span></div>
+      <textarea id="input-${cat.id}" placeholder="כתוב/י כאן..." oninput="onAnswer('${cat.id}',this)"></textarea>
+    </div>`;
+  }).join('');
+  html+=`<div class="torah-card">
+    <div class="q-header"><span class="q-icon">📖</span><span class="q-title">פסקה יפה של לימוד תורה</span></div>
+    <div class="torah-text">${torah.text}</div>
+    <div class="torah-source">${torah.source}</div>
+    <button class="torah-check-btn" id="torahBtn" onclick="toggleTorah()"><span class="checkbox" id="torahCB"></span> קראתי! ✓</button>
+  </div>
+  <button class="submit-btn" id="submitBtn" onclick="submitDay()" disabled>🎉 סיימתי!</button>`;
+  fc.innerHTML=html;updateProgress();
+}
+function onAnswer(qId,el){
+  const c=document.getElementById('card-'+qId);
+  if(el.value.trim().length>2&&!answeredQ.has(qId)){answeredQ.add(qId);c.classList.add('answered');showMini(el,20);}
+  else if(el.value.trim().length<=2&&answeredQ.has(qId)){answeredQ.delete(qId);c.classList.remove('answered');}
+  updateProgress();
+}
+function toggleTorah(){
+  torahRead=!torahRead;
+  const b=document.getElementById('torahBtn'),cb=document.getElementById('torahCB');
+  if(torahRead){b.classList.add('checked');cb.innerHTML='✓';showMini(b,20);}
+  else{b.classList.remove('checked');cb.innerHTML='';}
+  updateProgress();
+}
+function updateProgress(){
+  const t=CATEGORIES.length+1,d=answeredQ.size+(torahRead?1:0);
+  document.getElementById('progressBar').style.width=Math.round(d/t*100)+'%';
+  const b=document.getElementById('submitBtn');if(b)b.disabled=d===0;
+}
+function showMini(el,pts){
+  const p=PRAISE[Math.floor(Math.random()*PRAISE.length)];
+  const r=el.getBoundingClientRect(),d=document.createElement('div');
+  d.className='mini-points';d.textContent=`${p.emoji} ${p.text} +${pts}`;
+  d.style.left=r.left+r.width/2-50+'px';d.style.top=r.top-10+'px';
+  document.body.appendChild(d);setTimeout(()=>d.remove(),1500);
+}
+function submitDay(){
+  if(answeredQ.size===0&&!torahRead)return;
+  const entry={date:todayStr(),hebrewDate:HebDate.format(new Date()),answers:{},questions:{},torahRead,pointsEarned:0};
+  CATEGORIES.forEach(cat=>{
+    const v=document.getElementById('input-'+cat.id).value.trim();
+    entry.questions[cat.id]=getTodayQuestion(currentUser.id,cat.id);
+    if(v){entry.answers[cat.id]=v;entry.pointsEarned+=20;}
+  });
+  if(torahRead)entry.pointsEarned+=20;
+  if(answeredQ.size===CATEGORIES.length&&torahRead)entry.pointsEarned+=20;
+
+  const data=getData();
+  if(!data[currentUser.id])data[currentUser.id]={entries:[],totalPoints:0};
+  data[currentUser.id].entries.push(entry);
+  data[currentUser.id].totalPoints+=entry.pointsEarned;
+  saveData(data);
+  document.getElementById('totalPoints').textContent=data[currentUser.id].totalPoints;
+
+  const fm=FINALS[Math.floor(Math.random()*FINALS.length)];
+  const allDone=answeredQ.size===CATEGORIES.length&&torahRead;
+  document.getElementById('popupText').textContent=`+${entry.pointsEarned} נקודות!`;
+  document.getElementById('popupSub').textContent=allDone?`🌟 בונוס השלמה! ${fm}`:fm;
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('pointsPopup').classList.add('show');
+  launchConfetti();
+  setTimeout(()=>{
+    document.getElementById('overlay').classList.remove('show');
+    document.getElementById('pointsPopup').classList.remove('show');
+    renderForm();renderHistory();
+    const st=getStreak(currentUser.id);
+    if(st>1){document.getElementById('streakBar').style.display='flex';document.getElementById('streakText').textContent=`רצף של ${st} ימים!`;}
+  },3500);
+}
+function launchConfetti(){
+  const c=document.getElementById('confetti');c.innerHTML='';
+  const cols=['#7c3aed','#ec4899','#3b82f6','#10b981','#f59e0b','#ef4444','#fbbf24','#8b5cf6'];
+  for(let i=0;i<60;i++){const p=document.createElement('div');p.className='confetti-piece';p.style.left=Math.random()*100+'%';p.style.background=cols[Math.floor(Math.random()*cols.length)];p.style.borderRadius=Math.random()>.5?'50%':'2px';p.style.width=(8+Math.random()*10)+'px';p.style.height=(8+Math.random()*10)+'px';p.style.animationDelay=Math.random()*1.5+'s';p.style.animationDuration=(2+Math.random()*2)+'s';c.appendChild(p);}
+  setTimeout(()=>c.innerHTML='',5000);
+}
+
+// =============================================
+// HISTORY
+// =============================================
+function renderHistory(){
+  const ud=getUserData(currentUser.id),ct=document.getElementById('historyContent');
+  if(!ud.entries.length){ct.innerHTML='<div class="no-history"><div class="big">📝</div><div>עדיין אין רשומות – בואו נתחיל!</div></div>';return;}
+  ct.innerHTML=[...ud.entries].reverse().map(entry=>{
+    const d=new Date(entry.date),dw=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+    const ds=`יום ${dw[d.getDay()]}, ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+    const hd=entry.hebrewDate||HebDate.formatShort(entry.date);
+    let items=CATEGORIES.map(cat=>{
+      if(!entry.answers[cat.id])return'';
+      const qText=entry.questions&&entry.questions[cat.id]?entry.questions[cat.id]:cat.label;
+      return`<div class="history-item"><div class="label">${cat.icon} ${qText}</div><div class="value">${entry.answers[cat.id]}</div></div>`;
+    }).join('');
+    if(entry.torahRead)items+=`<div class="history-item"><div class="label">📖 קראתי פסקת תורה</div><div class="value">✅</div></div>`;
+    return`<div class="history-entry"><div class="history-date">📅 ${ds}</div><div class="history-date-hebrew">🕎 ${hd}</div>${items}<div class="history-points">⭐ ${entry.pointsEarned} נקודות</div></div>`;
+  }).join('');
+}
+
+// =============================================
+// TABS
+// =============================================
+function switchTab(tab){
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',(tab==='form'&&i===0)||(tab==='history'&&i===1)));
+  document.getElementById('formView').classList.toggle('active',tab==='form');
+  document.getElementById('historyView').classList.toggle('active',tab==='history');
+}
+
+// =============================================
+// INIT
+// =============================================
+renderLogin();
+</script>
+</body>
+</html>
