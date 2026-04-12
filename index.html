@@ -215,7 +215,7 @@
       <div class="points-badge">â­ <span id="totalPoints">0</span> × ×§××××ª</div>
       <div class="top-bar-actions">
         <button class="icon-btn" onclick="toggleSettings()">âï¸ ××××¨××ª</button>
-        <button class="icon-btn" onclick="logout()">ð ××××£</button>
+        <button class="icon-btn" onclick="logout()">ð ××××¨</button>
       </div>
     </div>
     <div class="settings-panel" id="settingsPanel">
@@ -867,6 +867,7 @@ function updateTopAvatar(){
 function login(uid){
   currentUser=USERS.find(u=>u.id===uid);
   answeredQ=new Set();torahRead=false;
+  window.location.hash=uid;
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('appScreen').style.display='block';
   document.getElementById('userName').textContent=currentUser.name;
@@ -883,6 +884,7 @@ function login(uid){
 }
 function logout(){
   currentUser=null;
+  history.pushState(null,'',window.location.pathname);
   document.getElementById('appScreen').style.display='none';
   document.getElementById('loginScreen').style.display='flex';
   renderLogin();
@@ -1015,7 +1017,18 @@ function switchTab(tab){
 // =============================================
 // INIT
 // =============================================
-renderLogin();
+(function init(){
+  const hash=window.location.hash.replace('#','');
+  const user=hash&&USERS.find(u=>u.id===hash);
+  if(user){attemptLogin(user.id);}
+  else{renderLogin();}
+})();
+window.addEventListener('hashchange',function(){
+  const hash=window.location.hash.replace('#','');
+  const user=hash&&USERS.find(u=>u.id===hash);
+  if(user&&(!currentUser||currentUser.id!==user.id)){attemptLogin(user.id);}
+  else if(!hash&&currentUser){logout();}
+});
 </script>
 </body>
 </html>
