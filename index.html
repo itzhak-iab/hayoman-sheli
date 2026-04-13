@@ -1059,38 +1059,58 @@ function switchTab(tab){
 // =============================================
 async function initFirebase(){
   try{
-    // Load diary data from Firebase
+    // === MERGE diary data from Firebase + localStorage ===
     const diarySnap=await db.ref('diary').once('value');
-    const fbDiary=diarySnap.val();
-    const localDiary=function(){try{return JSON.parse(localStorage.getItem('kidsDiary')||'{}')}catch{return{}}}();
-    if(fbDiary){
-      _diaryCache=fbDiary;
-      localStorage.setItem('kidsDiary',JSON.stringify(fbDiary));
-    }else if(Object.keys(localDiary).length>0){
-      // First time: push existing localStorage data to Firebase
-      _diaryCache=localDiary;
-      db.ref('diary').set(localDiary);
-    }else{
-      _diaryCache={};
+    const fbDiary=diarySnap.val()||{};
+    const localDiary=(function(){try{return JSON.parse(localStorage.getItem('kidsDiary')||'{}')}catch{return{}}})();
+
+    // Merge entries per user — combine both sources, deduplicate by date
+    const merged={};
+    const allUids=new Set([...Object.keys(fbDiary),...Object.keys(localDiary)]);
+    let diaryChanged=false;
+    allUids.forEach(uid=>{
+      const fb=fbDiary[uid]||{entries:[],totalPoints:0};
+      const lc=localDiary[uid]||{entries:[],totalPoints:0};
+      const fbE=Array.isArray(fb.entries)?fb.entries:(fb.entries?Object.values(fb.entries):[]);
+      const lcE=Array.isArray(lc.entries)?lc.entries:(lc.entries?Object.values(lc.entries):[]);
+      const byDate={};
+      fbE.forEach(e=>{if(e&&e.date)byDate[e.date]=e;});
+      lcE.forEach(e=>{if(e&&e.date&&!byDate[e.date]){byDate[e.date]=e;diaryChanged=true;}});
+      if(!fbE.length&&lcE.length)diaryChanged=true;
+      const all=Object.values(byDate);
+      if(all.length>0){
+        merged[uid]={entries:all,totalPoints:all.reduce((s,e)=>s+(e.pointsEarned||0),0)};
+      }
+    });
+
+    _diaryCache=merged;
+    localStorage.setItem('kidsDiary',JSON.stringify(merged));
+    if(Object.keys(merged).length>0&&(diaryChanged||!diarySnap.val())){
+      await db.ref('diary').set(merged);
     }
 
-    // Load meta data from Firebase
+    // === MERGE meta data from Firebase + localStorage ===
     const metaSnap=await db.ref('meta').once('value');
-    const fbMeta=metaSnap.val();
-    if(fbMeta){
-      _metaCache=fbMeta;
-      USERS.forEach(u=>{if(_metaCache[u.id])localStorage.setItem('kidsMeta_'+u.id,JSON.stringify(_metaCache[u.id]));});
-    }else{
-      // First time: push existing localStorage meta to Firebase
-      USERS.forEach(u=>{
-        const m=function(){try{return JSON.parse(localStorage.getItem('kidsMeta_'+u.id)||'{}')}catch{return{}}}();
-        _metaCache[u.id]=m;
-        if(Object.keys(m).length>0)db.ref('meta/'+u.id).set(m);
-      });
-    }
+    const fbMeta=metaSnap.val()||{};
+    let metaChanged=false;
+    USERS.forEach(u=>{
+      const fbM=fbMeta[u.id]||{};
+      const lcM=(function(){try{return JSON.parse(localStorage.getItem('kidsMeta_'+u.id)||'{}')}catch{return{}}})();
+      // Merge: localStorage first, then Firebase overwrites (Firebase is newer)
+      const mergedM={...lcM,...fbM};
+      // But if localStorage has keys Firebase doesn't, flag as changed
+      Object.keys(lcM).forEach(k=>{if(!(k in fbM)&&lcM[k])metaChanged=true;});
+      _metaCache[u.id]=mergedM;
+      localStorage.setItem('kidsMeta_'+u.id,JSON.stringify(mergedM));
+      if(Object.keys(mergedM).length>0&&(metaChanged||!fbMeta[u.id])){
+        db.ref('meta/'+u.id).set(mergedM);
+      }
+    });
 
     // Set up realtime listeners for cross-device sync
+    let firstDiaryEvent=true;
     db.ref('diary').on('value',snap=>{
+      if(firstDiaryEvent){firstDiaryEvent=false;return;}// skip initial fire
       if(snap.val()){
         _diaryCache=snap.val();
         localStorage.setItem('kidsDiary',JSON.stringify(_diaryCache));
@@ -1104,7 +1124,9 @@ async function initFirebase(){
         }
       }
     });
+    let firstMetaEvent=true;
     db.ref('meta').on('value',snap=>{
+      if(firstMetaEvent){firstMetaEvent=false;return;}// skip initial fire
       if(snap.val()){
         _metaCache=snap.val();
         if(currentUser){updatePhotoUI();updateTopAvatar();}
@@ -1115,8 +1137,8 @@ async function initFirebase(){
     _firebaseReady=true;
   }catch(e){
     console.warn('Firebase init failed, using localStorage:',e);
-    _diaryCache=function(){try{return JSON.parse(localStorage.getItem('kidsDiary')||'{}')}catch{return{}}}();
-    USERS.forEach(u=>_metaCache[u.id]=function(){try{return JSON.parse(localStorage.getItem('kidsMeta_'+u.id)||'{}')}catch{return{}}}());
+    _diaryCache=(function(){try{return JSON.parse(localStorage.getItem('kidsDiary')||'{}')}catch{return{}}})();
+    USERS.forEach(u=>_metaCache[u.id]=(function(){try{return JSON.parse(localStorage.getItem('kidsMeta_'+u.id)||'{}')}catch{return{}}})());
   }
 }
 
