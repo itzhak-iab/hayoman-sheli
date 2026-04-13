@@ -248,7 +248,25 @@
   </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script>
+// =============================================
+// FIREBASE SETUP
+// =============================================
+const firebaseConfig={
+  apiKey:"AIzaSyCFV_7WsMDcQcqrevXn5k6FavPdE8SECv0",
+  authDomain:"hayoman-sheli-c5994.firebaseapp.com",
+  databaseURL:"https://hayoman-sheli-c5994-default-rtdb.firebaseio.com",
+  projectId:"hayoman-sheli-c5994",
+  storageBucket:"hayoman-sheli-c5994.firebasestorage.app",
+  messagingSenderId:"597291952198",
+  appId:"1:597291952198:web:024fb123ac3f699d6e8247"
+};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
+let _diaryCache=null,_metaCache={},_firebaseReady=false;
+
 // =============================================
 // HEBREW DATE
 // =============================================
@@ -743,13 +761,35 @@ const FINALS=['סיימת את היומן של היום!','עוד יום מדה�
 let currentUser=null, answeredQ=new Set(), torahRead=false, pendingLogin=null;
 
 // =============================================
-// STORAGE
+// STORAGE (Firebase + localStorage cache)
 // =============================================
-function getData(){try{return JSON.parse(localStorage.getItem('kidsDiary')||'{}')}catch{return{}}}
-function saveData(d){localStorage.setItem('kidsDiary',JSON.stringify(d))}
-function getUserData(uid){const d=getData();if(!d[uid])d[uid]={entries:[],totalPoints:0};return d[uid];}
-function getMeta(uid){try{return JSON.parse(localStorage.getItem('kidsMeta_'+uid)||'{}')}catch{return{}}}
-function saveMeta(uid,m){localStorage.setItem('kidsMeta_'+uid,JSON.stringify(m))}
+function getData(){
+  if(_diaryCache!==null)return _diaryCache;
+  try{return JSON.parse(localStorage.getItem('kidsDiary')||'{}')}catch{return{}}
+}
+function saveData(d){
+  _diaryCache=d;
+  localStorage.setItem('kidsDiary',JSON.stringify(d));
+  db.ref('diary').set(d).catch(e=>console.warn('Firebase write error:',e));
+}
+function getUserData(uid){
+  const d=getData();
+  if(!d[uid])d[uid]={entries:[],totalPoints:0};
+  // Firebase may convert arrays to objects with numeric keys; fix that
+  if(d[uid].entries&&!Array.isArray(d[uid].entries)){
+    d[uid].entries=Object.values(d[uid].entries);
+  }
+  return d[uid];
+}
+function getMeta(uid){
+  if(_metaCache[uid]!==undefined)return _metaCache[uid];
+  try{return JSON.parse(localStorage.getItem('kidsMeta_'+uid)||'{}')}catch{return{}}
+}
+function saveMeta(uid,m){
+  _metaCache[uid]=m;
+  localStorage.setItem('kidsMeta_'+uid,JSON.stringify(m));
+  db.ref('meta/'+uid).set(m).catch(e=>console.warn('Firebase meta write error:',e));
+}
 function getPhoto(uid){return getMeta(uid).photo||null}
 function getPass(uid){return getMeta(uid).password||null}
 
@@ -1015,14 +1055,85 @@ function switchTab(tab){
 }
 
 // =============================================
-// INIT
+// INIT (Firebase-aware)
 // =============================================
-(function init(){
+async function initFirebase(){
+  try{
+    // Load diary data from Firebase
+    const diarySnap=await db.ref('diary').once('value');
+    const fbDiary=diarySnap.val();
+    const localDiary=function(){try{return JSON.parse(localStorage.getItem('kidsDiary')||'{}')}catch{return{}}}();
+    if(fbDiary){
+      _diaryCache=fbDiary;
+      localStorage.setItem('kidsDiary',JSON.stringify(fbDiary));
+    }else if(Object.keys(localDiary).length>0){
+      // First time: push existing localStorage data to Firebase
+      _diaryCache=localDiary;
+      db.ref('diary').set(localDiary);
+    }else{
+      _diaryCache={};
+    }
+
+    // Load meta data from Firebase
+    const metaSnap=await db.ref('meta').once('value');
+    const fbMeta=metaSnap.val();
+    if(fbMeta){
+      _metaCache=fbMeta;
+      USERS.forEach(u=>{if(_metaCache[u.id])localStorage.setItem('kidsMeta_'+u.id,JSON.stringify(_metaCache[u.id]));});
+    }else{
+      // First time: push existing localStorage meta to Firebase
+      USERS.forEach(u=>{
+        const m=function(){try{return JSON.parse(localStorage.getItem('kidsMeta_'+u.id)||'{}')}catch{return{}}}();
+        _metaCache[u.id]=m;
+        if(Object.keys(m).length>0)db.ref('meta/'+u.id).set(m);
+      });
+    }
+
+    // Set up realtime listeners for cross-device sync
+    db.ref('diary').on('value',snap=>{
+      if(snap.val()){
+        _diaryCache=snap.val();
+        localStorage.setItem('kidsDiary',JSON.stringify(_diaryCache));
+        if(currentUser){
+          const ud=getUserData(currentUser.id);
+          document.getElementById('totalPoints').textContent=ud.totalPoints;
+          const st=getStreak(currentUser.id);
+          const sb=document.getElementById('streakBar');
+          if(st>1){sb.style.display='flex';document.getElementById('streakText').textContent=`רצף של ${st} ימים!`;}else{sb.style.display='none';}
+          renderForm();renderHistory();
+        }
+      }
+    });
+    db.ref('meta').on('value',snap=>{
+      if(snap.val()){
+        _metaCache=snap.val();
+        if(currentUser){updatePhotoUI();updateTopAvatar();}
+        renderLogin();
+      }
+    });
+
+    _firebaseReady=true;
+  }catch(e){
+    console.warn('Firebase init failed, using localStorage:',e);
+    _diaryCache=function(){try{return JSON.parse(localStorage.getItem('kidsDiary')||'{}')}catch{return{}}}();
+    USERS.forEach(u=>_metaCache[u.id]=function(){try{return JSON.parse(localStorage.getItem('kidsMeta_'+u.id)||'{}')}catch{return{}}}());
+  }
+}
+
+(async function init(){
+  // Show login screen immediately with localStorage data while Firebase loads
+  renderLogin();
   const hash=window.location.hash.replace('#','');
   const user=hash&&USERS.find(u=>u.id===hash);
+
+  // Load Firebase data
+  await initFirebase();
+
+  // Re-render with Firebase data and handle hash routing
+  renderLogin();
   if(user){attemptLogin(user.id);}
-  else{renderLogin();}
 })();
+
 window.addEventListener('hashchange',function(){
   const hash=window.location.hash.replace('#','');
   const user=hash&&USERS.find(u=>u.id===hash);
