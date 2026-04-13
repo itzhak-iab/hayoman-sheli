@@ -845,7 +845,7 @@ function attemptLogin(uid){
 }
 function modalConfirm(){
   const v=document.getElementById('modalInput').value;
-  if(v===getPass(pendingLogin)){closeModal();login(pendingLogin);}
+  if(v===getPass(pendingLogin)){const uid=pendingLogin;closeModal();login(uid);}
   else{document.getElementById('modalError').style.display='block';document.getElementById('modalInput').value='';document.getElementById('modalInput').focus();}
 }
 function closeModal(){document.getElementById('passwordModal').classList.remove('show');pendingLogin=null;}
